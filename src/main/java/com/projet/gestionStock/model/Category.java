@@ -3,7 +3,7 @@ package com.projet.gestionStock.model;
 import jakarta.persistence.*;
 
 @Entity
-@table(name="category")
+@Table(name="category")
 public class Category {
     @Id
     private long id;
