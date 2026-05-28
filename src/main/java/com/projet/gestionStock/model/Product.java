@@ -6,6 +6,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+
 @Entity
 @Data
 @NoArgsConstructor
@@ -30,7 +33,9 @@ public class Product {
     private Integer minStock;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    
     @JoinColumn(nullable = false, name = "category_id")
+    @JsonIgnoreProperties({"products", "hibernateLazyInitializer", "handler"})
     private Category category;
 
     @Column(name = "create_at" , updatable = false)
@@ -41,5 +46,7 @@ public class Product {
     protected void onCreate(){
         this.createdAt = LocalDateTime.now();
     }
+
+    
 
 }
