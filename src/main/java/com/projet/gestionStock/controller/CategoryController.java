@@ -4,7 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.projet.gestionStock.model.Category;
-import com.projet.gestionStock.repository.CategoryRepository;
+import com.projet.gestionStock.service.CategoryService;
 
 import lombok.AllArgsConstructor;
 
@@ -15,37 +15,28 @@ import java.util.List;
 @RequestMapping("/categories")
 public class CategoryController {
 
-    private final CategoryRepository categoryRepository;
+    private final CategoryService categoryService;
 
     @GetMapping
     public ResponseEntity<List<Category>> getAllCategories() {
-        return ResponseEntity.ok(categoryRepository.findAll());
+        return ResponseEntity.ok(categoryService.getAllCategories());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Category> getCategoryById(@PathVariable Long id){
-        Category ctg = categoryRepository.findById(id)
-        .orElseThrow(() -> categoryNotFoundException(id));
-        return ResponseEntity.ok(ctg);
+        return ResponseEntity.ok(categoryService.getCategoryById(id));
     }
 
 
     @PostMapping
     public ResponseEntity<Category> createCategory(@RequestBody Category category){
-        Category ctg = categoryRepository.save(category);
-        return new ResponseEntity<>(ctg,HttpStatus.CREATED);
+        return new ResponseEntity<>(categoryService.createCategory(category),HttpStatus.CREATED);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCategory(@PathVariable Long id){
-        Category ctg = categoryRepository.findById(id)
-        .orElseThrow(() -> categoryNotFoundException(id));
-        categoryRepository.delete(ctg);
+        categoryService.deleteCategory(id);
         return ResponseEntity.noContent().build();
-    }
-
-    protected RuntimeException categoryNotFoundException(Long id){
-        return new RuntimeException("Category not found with id: " + id);
     }
 
 }
