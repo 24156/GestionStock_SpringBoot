@@ -38,7 +38,7 @@ public class JwtService {
         try {
             extractUsername(token);
             return true;
-        } catch (Exception e) {
+        } catch (JwtException e) {
             return false;
         }
     }
