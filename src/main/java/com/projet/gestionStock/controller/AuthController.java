@@ -4,14 +4,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import com.projet.gestionStock.model.User;
+import com.projet.gestionStock.dto.response.UserResponse;
 import com.projet.gestionStock.service.UserService;
-
-import com.projet.gestionStock.dto.LoginRequest;
-import com.projet.gestionStock.dto.AuthResponse;
-
-
-
+import com.projet.gestionStock.dto.request.LoginRequest;
+import com.projet.gestionStock.dto.request.RegisterRequest;
+import com.projet.gestionStock.dto.response.AuthResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,17 +21,17 @@ public class AuthController {
 
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody User user){
+    public ResponseEntity<UserResponse> register(@RequestBody RegisterRequest req){
 
-        User newUser = userService.register(user);
+        UserResponse res = userService.register(req);
 
-        return new ResponseEntity<>(newUser, HttpStatus.CREATED);
+        return new ResponseEntity<>(res, HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest request) {
-
-        return ResponseEntity.ok(userService.login(request));
+    public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest req) {
+        AuthResponse res = userService.login(req);
+        return ResponseEntity.ok(res);
     }
 
 }
