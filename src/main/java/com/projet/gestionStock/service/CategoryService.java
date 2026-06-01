@@ -1,38 +1,85 @@
 package com.projet.gestionStock.service;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.projet.gestionStock.dto.request.CategoryRequest;
+import com.projet.gestionStock.dto.response.CategoryResponse;
+import com.projet.gestionStock.exception.ResourceNotFoundException;
 import com.projet.gestionStock.model.Category;
+import com.projet.gestionStock.model.User;
 import com.projet.gestionStock.repository.CategoryRepository;
+import com.projet.gestionStock.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
+
+
 
 @Service
 @RequiredArgsConstructor
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final UserRepository userRepository; 
 
-    public List<Category> getAllCategories(){
-        return categoryRepository.findAll();
+    @Transactional(readOnly = true)
+    public List<CategoryResponse> getAllCategories(){
+        return categoryRepository.findAll().stream()
+        .map(ctg -> new CategoryResponse(
+            ctg.getId(),
+            ctg.getName(),
+            ctg.getDescription(),
+            ctg.getUser() != null ? ctg.getUser().getId() : null,
+            ctg.getCreatedAt()
+        ))
+        .collect(Collectors.toList());
     }
 
-    public Category getCategoryById(Long id){
-        return categoryRepository.findById(id)
-                .orElseThrow(() ->  categoryNotFoundException(id));
+    @Transactional(readOnly = true)
+    public CategoryResponse getCategoryById(Long id){
+        Category ctg = categoryRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
+
+        return new CategoryResponse(
+                ctg.getId(),
+                ctg.getName(),
+                ctg.getDescription(),
+                ctg.getUser().getId(),
+                ctg.getCreatedAt()
+        );
     }
 
-    public Category createCategory(Category category){
-        return categoryRepository.save(category);
+    @Transactional
+    public CategoryResponse createCategory(CategoryRequest request, String username) {
+        User user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
+
+        Category category = new Category();
+        category.setName(request.getName());
+        category.setDescription(request.getDescription());
+        category.setUser(user);
+
+        Category savedCategory = categoryRepository.save(category);
+
+        return new CategoryResponse(
+            savedCategory.getId(),
+            savedCategory.getName(),
+            savedCategory.getDescription(),
+            savedCategory.getUser().getId(),
+            savedCategory.getCreatedAt()
+        );
+    
     }
 
+    @Transactional
     public void deleteCategory(Long id){
         Category ctg = categoryRepository.findById(id)
-                .orElseThrow(() -> categoryNotFoundException(id));
+            .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
 
         categoryRepository.delete(ctg);
     }
 
-    private RuntimeException categoryNotFoundException(Long id){
-        return new RuntimeException("Category not found with id: " + id);
-    }
 }

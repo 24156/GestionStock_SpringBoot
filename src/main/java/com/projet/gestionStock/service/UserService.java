@@ -2,11 +2,15 @@ package com.projet.gestionStock.service;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import com.projet.gestionStock.dto.AuthResponse;
-import com.projet.gestionStock.dto.LoginRequest;
+import org.springframework.transaction.annotation.Transactional;
+import com.projet.gestionStock.dto.request.LoginRequest;
+import com.projet.gestionStock.dto.request.RegisterRequest;
+import com.projet.gestionStock.dto.response.AuthResponse;
 import com.projet.gestionStock.model.User;
 import com.projet.gestionStock.repository.UserRepository;
+import com.projet.gestionStock.dto.response.UserResponse;
+import com.projet.gestionStock.exception.BadRequestException;
+import com.projet.gestionStock.exception.ResourceNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,25 +22,39 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    public User register(User user){
+    @Transactional
+    public UserResponse register(RegisterRequest request){
 
-        if(userRepository.existsByEmail(user.getEmail())){
-            throw new RuntimeException("Email already exists.");
+        if (request.getPassword() == null || request.getPassword().isBlank()) {
+            throw new BadRequestException("Password is required");
         }
 
-        if(userRepository.existsByUsername(user.getUsername())){
-            throw new RuntimeException("Username already exists.");
+        if(userRepository.existsByEmail(request.getEmail())){
+            throw new BadRequestException("Email already exists.");
         }
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userRepository.save(user);
+
+        if(userRepository.existsByUsername(request.getUsername())){
+            throw new BadRequestException("Username already exists.");
+        }
+
+        User user = new User();
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        User savedUser = userRepository.save(user);
+
+        return new UserResponse(savedUser.getId(), savedUser.getUsername(), savedUser.getEmail());
     }
 
+
+    @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request){
          User user = userRepository.findByUsername(request.getUsername())
-            .orElseThrow(() -> new RuntimeException("User not found"));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + request.getUsername()));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Wrong password");
+            throw new BadRequestException("Wrong password");
         }
 
         String token = jwtService.generateToken(user.getUsername());

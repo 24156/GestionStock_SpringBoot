@@ -1,10 +1,14 @@
 package com.projet.gestionStock.service;
 
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.projet.gestionStock.dto.request.ProductRequest;
+import com.projet.gestionStock.dto.response.ProductResponse;
+import com.projet.gestionStock.exception.ResourceNotFoundException;
 import com.projet.gestionStock.model.Category;
 import com.projet.gestionStock.model.Product;
 import com.projet.gestionStock.model.User;
@@ -18,55 +22,80 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class ProductService {
 
-    final private ProductRepository productRepository;
-    final private CategoryRepository categoryRepository;
-    final private UserRepository userRepository;
+    private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository; 
+    private final UserRepository userRepository;
 
-    public List<Product> getAllProducts(){
-        return productRepository.findAll();
+    @Transactional(readOnly = true)
+    public List<ProductResponse> getAllProducts() {
+        return productRepository.findAll().stream()
+                .map(pr -> new ProductResponse(
+                        pr.getId(),
+                        pr.getName(),
+                        pr.getPrice(),
+                        pr.getStock(),
+                        pr.getMinStock(),
+                        pr.getCategory().getId(),
+                        pr.getCategory().getName(),
+                        pr.getUser().getId(),
+                        pr.getCreatedAt()
+                )).collect(Collectors.toList());
     }
 
-    public Product getProductById(Long id){
-        return productRepository.findById(id)
-        .orElseThrow(() -> productNotFoundException(id));
-    }
-
-    public Product createProduct(Map<String, Object> request){
-
-        String name = (String) request.get("name");
-        Double price = Double.valueOf(request.get("price").toString());
-        Integer stock = Integer.valueOf(request.get("stock").toString());
-        Integer minStock = Integer.valueOf(request.get("minStock").toString());
-
-        Long categoryId = Long.valueOf(request.get("categoryId").toString());
-        Long userId = Long.valueOf(request.get("userId").toString());
-
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        Product product = new Product();
-        product.setName(name);
-        product.setPrice(price);
-        product.setStock(stock);
-        product.setMinStock(minStock);
-        product.setCategory(category);
-        product.setUser(user);
-
-        return productRepository.save(product);
-    }
-
-    public void deleteProduct(Long id){
+    @Transactional(readOnly = true)
+    public ProductResponse getProductById(Long id) {
         Product pr = productRepository.findById(id)
-        .orElseThrow(() -> productNotFoundException(id));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+
+        return new ProductResponse(
+                pr.getId(), 
+                pr.getName(),
+                pr.getPrice(),
+                pr.getStock(), 
+                pr.getMinStock(), 
+                pr.getCategory().getId(),
+                pr.getCategory().getName(),
+                pr.getUser().getId(),
+                pr.getCreatedAt()
+        );
+    }
+
+    @Transactional
+    public ProductResponse createProduct(ProductRequest request, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
+        
+        Category category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + request.getCategoryId()));
+        
+        Product pr = new Product();
+        pr.setName(request.getName());
+        pr.setPrice(request.getPrice());
+        pr.setStock(request.getStock());
+        pr.setMinStock(request.getMinStock());
+        pr.setCategory(category); 
+        pr.setUser(user);
+
+        Product savePr = productRepository.save(pr);
+
+        return new ProductResponse(
+                savePr.getId(),
+                savePr.getName(),
+                savePr.getPrice(),
+                savePr.getStock(),
+                savePr.getMinStock(),
+                savePr.getCategory().getId(),
+                savePr.getCategory().getName(),
+                savePr.getUser().getId(),
+                savePr.getCreatedAt()
+        );
+    }
+
+    @Transactional
+    public void deleteProduct(Long id) {
+        Product pr = productRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
 
         productRepository.delete(pr);
     }
-
-    private RuntimeException productNotFoundException(Long id){
-        return new RuntimeException("Product not found with id: " + id);
-    }
-    
 }
