@@ -8,7 +8,7 @@ import lombok.Setter;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 
 
@@ -30,7 +30,7 @@ public class Category {
     private String description;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties("category")
+    @JsonIgnore
     private List<Product> products;
 
     @Column(name = "created_at",updatable= false)
