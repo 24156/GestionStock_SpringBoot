@@ -1,4 +1,4 @@
-package com.projet.gestionStock.dto.response;
+package com.projet.gestionStock.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
