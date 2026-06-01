@@ -2,19 +2,21 @@ package com.projet.gestionStock.model;
 import java.time.LocalDateTime;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 
 
 @Entity
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name="category")
+@Table(name="categories")
 public class Category {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,11 +29,15 @@ public class Category {
     private String description;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnoreProperties("category")
-    List<Product> products;
+    private List<Product> products;
 
-    @Column(name = "create_at",updatable= false)
+    @Column(name = "created_at",updatable= false)
     private LocalDateTime createdAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
 
     @PrePersist
     protected void onCreate(){

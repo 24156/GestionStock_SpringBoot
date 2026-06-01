@@ -2,11 +2,14 @@ package com.projet.gestionStock.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 import java.util.List;
-import com.projet.gestionStock.model.Product;
-import com.projet.gestionStock.repository.ProductRepository;
+
+import com.projet.gestionStock.dto.request.ProductRequest;
+import com.projet.gestionStock.dto.response.ProductResponse;
+import com.projet.gestionStock.service.ProductService;
 
 
 @RestController
@@ -14,38 +17,32 @@ import com.projet.gestionStock.repository.ProductRepository;
 @RequiredArgsConstructor
 public class ProductController {
 
-    private final ProductRepository productRepository;
+    private final ProductService productService;
 
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts(){
-        return ResponseEntity.ok(productRepository.findAll());
+    public ResponseEntity<List<ProductResponse>> getAllProducts(){
+        return ResponseEntity.ok(productService.getAllProducts());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id){
-        Product pr = productRepository.findById(id)
-        .orElseThrow(() ->  productNotFoundException(id));
-        return ResponseEntity.ok(pr);
+    public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id){
+        return ResponseEntity.ok(productService.getProductById(id));
     }
 
-
     @PostMapping
-    public ResponseEntity<Product> createProduct(@RequestBody Product pr){
-        Product savePr = productRepository.save(pr);
-        return new ResponseEntity<>(savePr,HttpStatus.CREATED);
+    public ResponseEntity<ProductResponse> createProduct(
+        @RequestBody ProductRequest req,
+        @AuthenticationPrincipal(expression = "username") String username) {
+
+        ProductResponse res = productService.createProduct(req, username);
+        return new ResponseEntity<>(res, HttpStatus.CREATED);
     }
 
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id){
-        Product pr = productRepository.findById(id)
-        .orElseThrow(() -> productNotFoundException(id));
-        productRepository.delete(pr);
+        productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
-    }
-
-    protected RuntimeException productNotFoundException(Long id){
-        return new RuntimeException("Product not found with id: " + id);
     }
 
 }

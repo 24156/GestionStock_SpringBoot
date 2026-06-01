@@ -2,15 +2,17 @@ package com.projet.gestionStock.model;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name="products")
@@ -35,18 +37,19 @@ public class Product {
     @ManyToOne(fetch = FetchType.LAZY)
     
     @JoinColumn(nullable = false, name = "category_id")
-    @JsonIgnoreProperties({"products", "hibernateLazyInitializer", "handler"})
     private Category category;
 
-    @Column(name = "create_at" , updatable = false)
+    @Column(name = "created_at" , updatable = false)
     private LocalDateTime createdAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @PrePersist
     protected void onCreate(){
         this.createdAt = LocalDateTime.now();
     }
 
-    
 
 }

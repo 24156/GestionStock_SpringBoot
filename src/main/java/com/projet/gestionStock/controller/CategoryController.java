@@ -3,49 +3,45 @@ package com.projet.gestionStock.controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.projet.gestionStock.model.Category;
-import com.projet.gestionStock.repository.CategoryRepository;
-
-import lombok.AllArgsConstructor;
+import com.projet.gestionStock.dto.request.CategoryRequest;
+import com.projet.gestionStock.dto.response.CategoryResponse;
+import com.projet.gestionStock.service.CategoryService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
 @RestController
-@AllArgsConstructor
+@RequiredArgsConstructor
 @RequestMapping("/categories")
 public class CategoryController {
 
-    private final CategoryRepository categoryRepository;
+    private final CategoryService categoryService;
 
     @GetMapping
-    public ResponseEntity<List<Category>> getAllCategories() {
-        return ResponseEntity.ok(categoryRepository.findAll());
+    public ResponseEntity<List<CategoryResponse>> getAllCategories() {
+        return ResponseEntity.ok(categoryService.getAllCategories());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Category> getCategoryById(@PathVariable Long id){
-        Category ctg = categoryRepository.findById(id)
-        .orElseThrow(() -> categoryNotFoundException(id));
-        return ResponseEntity.ok(ctg);
+    public ResponseEntity<CategoryResponse> getCategoryById(@PathVariable Long id){
+        return ResponseEntity.ok(categoryService.getCategoryById(id));
     }
 
 
     @PostMapping
-    public ResponseEntity<Category> createCategory(@RequestBody Category category){
-        Category ctg = categoryRepository.save(category);
-        return new ResponseEntity<>(ctg,HttpStatus.CREATED);
+    public ResponseEntity<CategoryResponse> createCategory(
+        @RequestBody CategoryRequest category,
+        @AuthenticationPrincipal(expression = "username") String username) {  
+                
+        CategoryResponse res = categoryService.createCategory(category, username);
+        return new ResponseEntity<>(res, HttpStatus.CREATED);
     }
-
+    
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCategory(@PathVariable Long id){
-        Category ctg = categoryRepository.findById(id)
-        .orElseThrow(() -> categoryNotFoundException(id));
-        categoryRepository.delete(ctg);
+        categoryService.deleteCategory(id);
         return ResponseEntity.noContent().build();
-    }
-
-    protected RuntimeException categoryNotFoundException(Long id){
-        return new RuntimeException("Category not found with id: " + id);
     }
 
 }
