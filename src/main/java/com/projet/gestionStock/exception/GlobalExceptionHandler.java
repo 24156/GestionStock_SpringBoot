@@ -25,6 +25,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponse> handleRuntime(RuntimeException ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                // la tense tbedel "ex.getMessage" be message yak teslek men the9rat SQL wla java.
                 .body(new ErrorResponse(500, ex.getMessage(), LocalDateTime.now()));
     }
 }
