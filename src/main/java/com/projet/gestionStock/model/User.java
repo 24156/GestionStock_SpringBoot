@@ -8,6 +8,7 @@ import lombok.Setter;
 
 import java.util.List;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 @Getter
@@ -24,7 +25,7 @@ public class User {
     private String username;
 
     @Column(nullable = false, length = 100)
-    @JsonIgnore 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Column(nullable = false, unique = true, length = 100)
