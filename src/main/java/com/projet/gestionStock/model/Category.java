@@ -8,7 +8,6 @@ import lombok.Setter;
 
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 
 
@@ -30,7 +29,6 @@ public class Category {
     private String description;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonIgnore
     private List<Product> products;
 
     @Column(name = "created_at",updatable= false)
@@ -38,13 +36,8 @@ public class Category {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    @com.fasterxml.jackson.annotation.JsonIgnore 
     private User user;
 
-    @com.fasterxml.jackson.annotation.JsonProperty("userId")
-    public Long getUserId() {
-        return user != null ? user.getId() : null;
-    }
 
     @PrePersist
     protected void onCreate(){

@@ -8,7 +8,6 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 
 @Entity
@@ -38,7 +37,6 @@ public class Product {
     @ManyToOne(fetch = FetchType.LAZY)
     
     @JoinColumn(nullable = false, name = "category_id")
-    @JsonIgnoreProperties({"products", "hibernateLazyInitializer", "handler"})
     private Category category;
 
     @Column(name = "created_at" , updatable = false)
@@ -46,19 +44,12 @@ public class Product {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    @com.fasterxml.jackson.annotation.JsonIgnore 
     private User user;
-
-    @com.fasterxml.jackson.annotation.JsonProperty("userId")
-    public Long getUserId() {
-        return user != null ? user.getId() : null;
-    }
 
     @PrePersist
     protected void onCreate(){
         this.createdAt = LocalDateTime.now();
     }
 
-    
 
 }
