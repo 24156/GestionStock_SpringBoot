@@ -98,4 +98,23 @@ public class ProductService {
 
         productRepository.delete(pr);
     }
+
+    @Transactional(readOnly = true)
+    public List<ProductResponse> getFilteredProducts(String name, Double minPrice, Double maxPrice, Long categoryId) {
+        org.springframework.data.jpa.domain.Specification<Product> spec = 
+                com.projet.gestionStock.specification.ProductSpecification.filterProducts(name, minPrice, maxPrice, categoryId);
+        
+        return productRepository.findAll(spec).stream()
+                .map(pr -> new ProductResponse(
+                        pr.getId(),
+                        pr.getName(),
+                        pr.getPrice(),
+                        pr.getStock(),
+                        pr.getMinStock(),
+                        pr.getCategory().getId(),
+                        pr.getCategory().getName(),
+                        pr.getUser().getId(),
+                        pr.getCreatedAt()
+                )).collect(Collectors.toList());
+    }
 }
