@@ -1,5 +1,9 @@
 package com.projet.gestionStock.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.stereotype.Repository;
 import com.projet.gestionStock.model.Product;
 
-public interface  ProductRepository extends JpaRepository<Product, Long> {}
+@Repository
+public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
+}
