@@ -47,7 +47,7 @@ public class CategoryService {
                 ctg.getId(),
                 ctg.getName(),
                 ctg.getDescription(),
-                ctg.getUser().getId(),
+                ctg.getUser() != null ? ctg.getUser().getId() : null,
                 ctg.getCreatedAt()
         );
     }
@@ -68,7 +68,7 @@ public class CategoryService {
             savedCategory.getId(),
             savedCategory.getName(),
             savedCategory.getDescription(),
-            savedCategory.getUser().getId(),
+            savedCategory.getUser()!= null ? savedCategory.getUser().getId() : null,
             savedCategory.getCreatedAt()
         );
     
