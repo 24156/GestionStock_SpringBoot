@@ -9,4 +9,6 @@ public class ProductRequest {
     private Integer stock;
     private Integer minStock;
     private Long categoryId;
+
+    private Long supplierId;
 }

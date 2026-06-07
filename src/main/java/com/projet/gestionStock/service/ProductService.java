@@ -12,9 +12,11 @@ import com.projet.gestionStock.exception.ResourceNotFoundException;
 import com.projet.gestionStock.model.Category;
 import com.projet.gestionStock.model.Product;
 import com.projet.gestionStock.model.User;
+import com.projet.gestionStock.model.Supplier;
 import com.projet.gestionStock.repository.CategoryRepository;
 import com.projet.gestionStock.repository.ProductRepository;
 import com.projet.gestionStock.repository.UserRepository;
+import com.projet.gestionStock.repository.SupplierRepository;
 
 import lombok.AllArgsConstructor;
 
@@ -25,6 +27,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository; 
     private final UserRepository userRepository;
+    private final SupplierRepository supplierRepository; 
 
     @Transactional(readOnly = true)
     public List<ProductResponse> getAllProducts() {
@@ -38,7 +41,9 @@ public class ProductService {
                         pr.getCategory().getId(),
                         pr.getCategory().getName(),
                         pr.getUser().getId(),
-                        pr.getCreatedAt()
+                        pr.getCreatedAt(),
+                        pr.getSupplier() != null ? pr.getSupplier().getId() : null,  
+                        pr.getSupplier() != null ? pr.getSupplier().getName() : null  
                 )).collect(Collectors.toList());
     }
 
@@ -56,7 +61,9 @@ public class ProductService {
                 pr.getCategory().getId(),
                 pr.getCategory().getName(),
                 pr.getUser().getId(),
-                pr.getCreatedAt()
+                pr.getCreatedAt(),
+                pr.getSupplier() != null ? pr.getSupplier().getId() : null,  
+                pr.getSupplier() != null ? pr.getSupplier().getName() : null 
         );
     }
 
@@ -68,6 +75,12 @@ public class ProductService {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + request.getCategoryId()));
         
+        Supplier supplier = null;
+        if (request.getSupplierId() != null) {
+            supplier = supplierRepository.findById(request.getSupplierId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + request.getSupplierId()));
+        }
+        
         Product pr = new Product();
         pr.setName(request.getName());
         pr.setPrice(request.getPrice());
@@ -75,6 +88,7 @@ public class ProductService {
         pr.setMinStock(request.getMinStock());
         pr.setCategory(category); 
         pr.setUser(user);
+        pr.setSupplier(supplier); 
 
         Product savePr = productRepository.save(pr);
 
@@ -87,7 +101,9 @@ public class ProductService {
                 savePr.getCategory().getId(),
                 savePr.getCategory().getName(),
                 savePr.getUser().getId(),
-                savePr.getCreatedAt()
+                savePr.getCreatedAt(),
+                savePr.getSupplier() != null ? savePr.getSupplier().getId() : null,   
+                savePr.getSupplier() != null ? savePr.getSupplier().getName() : null  
         );
     }
 
@@ -105,17 +121,19 @@ public class ProductService {
                 com.projet.gestionStock.specification.ProductSpecification.filterProducts(name, minPrice, maxPrice, categoryId);
         
         return productRepository.findAll(spec).stream()
-                .map(pr -> new ProductResponse(
-                        pr.getId(),
-                        pr.getName(),
-                        pr.getPrice(),
-                        pr.getStock(),
-                        pr.getMinStock(),
-                        pr.getCategory().getId(),
-                        pr.getCategory().getName(),
-                        pr.getUser().getId(),
-                        pr.getCreatedAt()
-                )).collect(Collectors.toList());
+        .map(pr -> new ProductResponse(
+                pr.getId(),
+                pr.getName(),
+                pr.getPrice(),
+                pr.getStock(),
+                pr.getMinStock(),
+                pr.getCategory().getId(),
+                pr.getCategory().getName(),
+                pr.getUser().getId(),
+                pr.getCreatedAt(),
+                pr.getSupplier() != null ? pr.getSupplier().getId() : null,
+                pr.getSupplier() != null ? pr.getSupplier().getName() : null            
+        )).collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -130,7 +148,9 @@ public class ProductService {
                 pr.getCategory().getId(),
                 pr.getCategory().getName(),
                 pr.getUser().getId(),
-                pr.getCreatedAt()
+                pr.getCreatedAt(),
+                pr.getSupplier() != null ? pr.getSupplier().getId() : null,   
+                pr.getSupplier() != null ? pr.getSupplier().getName() : null  
         )).collect(Collectors.toList());
     }
 }

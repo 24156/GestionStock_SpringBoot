@@ -16,4 +16,7 @@ public class ProductResponse {
     private String categoryName;
     private Long userId;
     private LocalDateTime createdAt;
+
+    private Long supplierId;
+    private String supplierName;
 }

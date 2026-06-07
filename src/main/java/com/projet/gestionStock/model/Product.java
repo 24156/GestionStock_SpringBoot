@@ -39,6 +39,10 @@ public class Product {
     @JoinColumn(nullable = false, name = "category_id")
     private Category category;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "supplier_id", nullable = true) 
+    private Supplier supplier;
+
     @Column(name = "created_at" , updatable = false)
     private LocalDateTime createdAt;
 
