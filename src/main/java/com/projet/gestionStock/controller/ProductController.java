@@ -12,6 +12,7 @@ import com.projet.gestionStock.dto.response.ProductResponse;
 import com.projet.gestionStock.service.ProductService;
 
 
+
 @RestController
 @RequestMapping("/products")
 @RequiredArgsConstructor
@@ -22,6 +23,22 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<List<ProductResponse>> getAllProducts(){
         return ResponseEntity.ok(productService.getAllProducts());
+    }
+
+
+    @GetMapping("/minstock")
+    public ResponseEntity<List<ProductResponse>> getAllLowStockProducts() {
+        return ResponseEntity.ok(productService.getAllLowStockProducts());
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductResponse>> searchProducts(
+        @RequestParam(required = false) String name,
+        @RequestParam(required = false) Double minPrice,
+        @RequestParam(required = false) Double maxPrice,
+        @RequestParam(required = false) Long categoryId) {
+            
+        return ResponseEntity.ok(productService.getFilteredProducts(name, minPrice, maxPrice, categoryId));
     }
 
     @GetMapping("/{id}")
@@ -44,15 +61,4 @@ public class ProductController {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
     }
-
-   @GetMapping("/search")
-    public ResponseEntity<List<ProductResponse>> searchProducts(
-        @RequestParam(required = false) String name,
-        @RequestParam(required = false) Double minPrice,
-        @RequestParam(required = false) Double maxPrice,
-        @RequestParam(required = false) Long categoryId) {
-            
-        return ResponseEntity.ok(productService.getFilteredProducts(name, minPrice, maxPrice, categoryId));
-    }
-
 }
