@@ -117,4 +117,20 @@ public class ProductService {
                         pr.getCreatedAt()
                 )).collect(Collectors.toList());
     }
+
+    @Transactional(readOnly = true)
+    public List<ProductResponse> getAllLowStockProducts(){
+        return productRepository.findLowStockProducts().stream()
+        .map(pr -> new ProductResponse(
+                pr.getId(),
+                pr.getName(),
+                pr.getPrice(),
+                pr.getStock(),
+                pr.getMinStock(),
+                pr.getCategory().getId(),
+                pr.getCategory().getName(),
+                pr.getUser().getId(),
+                pr.getCreatedAt()
+        )).collect(Collectors.toList());
+    }
 }
