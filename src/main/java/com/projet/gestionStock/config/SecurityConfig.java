@@ -43,6 +43,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/products/search").authenticated()
+                .requestMatchers("/products/minstock").authenticated()
                 .requestMatchers("/h2-console/**").authenticated()
                 .anyRequest().authenticated()
             )
