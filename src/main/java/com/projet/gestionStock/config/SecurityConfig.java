@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/products/search").authenticated()
                 .requestMatchers("/products/minstock").authenticated()
+                .requestMatchers("/suppliers/**").authenticated()
                 .requestMatchers("/h2-console/**").authenticated()
                 .anyRequest().authenticated()
             )
