@@ -45,6 +45,7 @@ public class SecurityConfig {
                 .requestMatchers("/products/search").authenticated()
                 .requestMatchers("/products/minstock").authenticated()
                 .requestMatchers("/suppliers/**").authenticated()
+                .requestMatchers("/movements/**").authenticated()
                 .requestMatchers("/h2-console/**").authenticated()
                 .anyRequest().authenticated()
             )
