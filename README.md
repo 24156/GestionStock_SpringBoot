@@ -1,126 +1,170 @@
 # GestionStock - Inventory Management Backend
 
-A Spring Boot 3.4.0 REST API built with Java 21 and PostgreSQL to manage products, categories, suppliers, and track automated stock movements. Designed to serve as a reliable backend for a Flutter mobile application.
+A Spring Boot 3.4.0 REST API built with Java 21 and PostgreSQL to manage products, categories, suppliers, and track automated stock movements. Designed to serve as a high-performance backend for a Flutter mobile application.
 
 ---
 
-## Architecture & Structural Overview
+## 🏗️ Architectural & Structural Overview
 
-The project follows a standard layered architecture to enforce a clean separation of concerns:
+The project follows a clean layered architecture to enforce separation of concerns, optimized for security, modularity, and smooth mobile client consumption:
 
 ```
 src/main/java/com/projet/gestionStock/
-├── config/         # Security and filter configurations (JWT, Web Security)
-├── controller/     # REST controllers exposing API endpoints
+├── config/         # Security & Filter setups (JWT Authentication, Web Security)
+├── controller/     # REST Controllers exposing the strict /api scope
 ├── dto/            # Data Transfer Objects
-│   ├── request/    # Inbound payload definitions
-│   └── response/   # Outbound response formats (Flutter tailored)
-├── exception/      # Global handler and application-specific exceptions
-├── model/          # JPA Hibernate entities
-├── repository/     # Data access abstraction layers
-├── service/        # Core business logic processing
+│   ├── request/    # Inbound payload validation structures
+│   └── response/   # Outbound response formats (Optimized for Flutter JSON mapping)
+├── exception/      # Centralized global exception interception layer
+├── model/          # Core JPA Hibernate domain entities
+├── repository/     # Data access abstraction layers (Spring Data JPA)
+├── service/        # Core business logic processing & transactional isolation
 └── specification/  # Dynamic search predicate builders (JPA Criteria API)
 ```
 
 ---
 
-## Implemented Core Features
+## 🚀 Implemented Core Features
 
-### 1. Secure Authentication Architecture
+### 1. Secure Authentication Layer
 
-- Secure token-based access utilizing **JWT (JSON Web Tokens)** managed by `JwtAuthFilter`.
-- Custom user authentication configured via Spring Security and a centralized `CustomUserDetailsService`.
-- Dynamic extraction of the current authenticated operator inside controllers using `@AuthenticationPrincipal`.
-- Centralized security structure where all application routing rules are safely unified under the `/api/**` scope.
+- Safe token-based access utilizing **JWT (JSON Web Tokens)** managed via stateful request interceptors (`JwtAuthFilter`).
+- Custom authentication context backed by a unified `CustomUserDetailsService`.
+- Dynamic operator extraction directly inside controllers using `@AuthenticationPrincipal`.
+- Complete fallback filtering where all security constraints are tightly bounded under the unified `/api/**` scope.
 
-### 2. Supplier & Categorization Engine
+### 2. High-Performance Unified Catalog Engine
 
-- Full structural separation of products using decoupled Category and Supplier entities.
-- Data contracts map essential metadata (`supplierName`, `categoryName`, IDs) safely into outbound structures without causing deep nested serialization anomalies or `NullPointerException` bugs on orphan records.
+- **DRY (Don't Repeat Yourself) Principle Enforcement:** Fully refactored service layers utilizing centralized private mapping handlers (`mapToResponse`) to eliminate compilation redundancy and streamline field modifications.
+- Decoupled relationship structures mapping key metadata (`supplierName`, `categoryName`, IDs) instantly, ensuring zero nested serialization loops or deep pointer crashes on orphan records.
 
-### 3. Inventory Controls & Dynamic Specifications
+### 3. Smart Unified Product Lookup (Best Practice Search)
 
-- Flexible cross-parameter searches using **JPA Specifications** (`CriteriaAPI`) to execute complex dynamic queries on data layers.
-- Low stock identification endpoint `/api/products/minstock` providing proactive tracking for active operations based on the state threshold condition:
+- Converted dynamic searches into a single, clean endpoint route mapping to the absolute root (`GET /api/products`).
+- Leverages optional query string parameters to dynamically apply **JPA Specifications** (`CriteriaAPI`) under the hood, completely mitigating URL path resolution ambiguities.
+- Automated low-stock warning triggers via a dedicated proactive view layer predicate:
   $$M_i = \{ p \in P \mid \text{stock}_p \le \text{minStock}_p \}$$
 
-### 4. Automated Stock Movements Log
+### 4. Dynamic Asset Mutation Tracking
 
-- Dedicated transactional logging mechanism tracing inventory mutations (`IN`, `OUT`, `ADJUSTMENT`).
-- Built-in business rules validation: operations falling below zero quantities throw `BadRequestException`.
-- Changes trigger an automatic update synchronization routine updating the absolute quantity values within the product records.
+- Core business logic automatically updates overall storage quantities instantly upon incoming stock mutations (`IN`, `OUT`, `ADJUSTMENT`).
+- Strict verification checks preventing physical values from dropping sub-zero, throwing a tailored `BadRequestException` whenever bounds are violated.
 
-### 5. Real-Time Dashboard & Analytics Engine 🚀
+### 5. Automated Operational Analytics & Dashboard
 
-- **Aggregated Enterprise Metrics:** Computes overall product varieties, categories, suppliers, and total warehouse inventory evaluation value ($stock \times price$) instantly.
-- **Daily Operations Monitoring:** Tracks real-time current-day performance counters, calculating precise total `IN` and `OUT` transaction volumes dynamically.
-- **Flutter Pie Chart Optimization:** Generates pre-calculated category stock percentage distribution map matrix structures safely rounded to 2 decimal places with mathematical zero-division protection safeguards.
+- **Financial Intelligence:** Aggregates immediate asset value evaluations ($\sum \text{stock} \times \text{price}$) on-the-fly.
+- **Flutter Charts Integration:** Tailors specific metric maps safely rounded to 2 decimal places with mathematical zero-division shields for instant rendering in mobile frontends.
 
 ---
 
-## Database Schema Model Overview
+## 🗺️ Restful API Domain & Architecture Mapping
 
 ```
-                   ┌──────────────┐
-                   │     User     │
-                   └──────┬───────┘
-                          │ 1
-                          │
-         ┌────────────────┼────────────────┐
-         │ 1              │ 1              │ 1
-         ▼                ▼                ▼
-   ┌──────────┐     ┌──────────┐     ┌──────────────┐
-   │ Category │     │ Supplier │     │StockMovement │
-   └────┬─────┘     └────┬─────┘     └──────┬───────┘
-        │ 1              │ 1                │ *
-        │                │                  │
-        └───────┬────────┘                  │
-                ▼                           │
-          ┌──────────┐                      │
-          │ Product  ◄──────────────────────┘
-          └──────────┘ *
+                      ┌──────────────────────────────┐
+                      │    Flutter Mobile App Client │
+                      └──────────────┬───────────────┘
+                                     │
+                        HTTP / JSON (RESTful API)
+                                     │
+                      ┌──────────────▼───────────────┐
+                      │    Gateway Base URL: /api    │
+                      └──────────────┬───────────────┘
+                                     │
+         ┌───────────────────────────┼───────────────────────────┐
+         ▼                           ▼                           ▼
+ ┌───────────────┐           ┌───────────────┐           ┌───────────────┐
+ │ Auth Domain   │           │ Operational   │           │ Analytical    │
+ │ (Non-Secured) │           │ Core Domains  │           │ Domain        │
+ └───────┬───────┘           └───────┬───────┘           └───────┬───────┘
+         │                           │                           │
+         ├─ /auth/login              ├─ /products                └─ /dashboard
+         └─ /auth/register           ├─ /categories
+                                     ├─ /suppliers
+                                     └─ /movements
 ```
 
+### 🔑 1. Authentication Naming Scope (`/api/auth`)
+
+- `POST /register` - Registers a new enterprise operator/manager account.
+- `POST /login` - Evaluates credentials and passes back the authorization token block.
+
+### 📊 2. Analytical Naming Scope (`/api/dashboard`)
+
+- `GET /` - Resolves aggregated warehouse metrics, daily task volume loops, and pre-calculated statistics.
+
+### 📦 3. Products Operations Naming Scope (`/api/products`)
+
+- `GET /` - Fetches all tracking records **OR** filters them instantly via optional query keys (`name`, `minPrice`, `maxPrice`, `categoryId`).
+- `GET /{id}` - Returns the full schema profile of a targeted product block.
+- `GET /minstock` - Pulls out critical low inventory anomalies.
+- `POST /` - Commits a new inventory tracking object to database storage.
+- `PUT /{id}` - Completely updates metadata structures for an existing entity block.
+- `DELETE /{id}` - Wipes a specified product block tracking profile securely.
+
+### 📁 4. Categories Naming Scope (`/api/categories`)
+
+- `GET /` - Lists all structural inventory groupings.
+- `GET /{id}` - Grabs a single classification record via identifier matching.
+- `POST /` - Registers a new taxonomic classification node.
+- `PUT /{id}` - Modifies name and description tracking values of a grouping.
+- `DELETE /{id}` - Erases a grouping index safely if clear of structural dependencies.
+
+### 🤝 5. Suppliers Naming Scope (`/api/suppliers`)
+
+- `GET /` - Resolves active enterprise partners and wholesale lists.
+- `GET /{id}` - Resolves contact cards for a specific individual profile pointer.
+- `POST /` - Registers a partner contact point metadata profile.
+- `PUT /{id}` - Adjusts detailed address/phone variables within a partner profile.
+- `DELETE /{id}` - Drops an existing supplier node indexes securely.
+
+### 🔄 6. Stock Movements Naming Scope (`/api/movements`)
+
+- `POST /` - Generates custom historical transformation sequences (`IN`/`OUT`/`ADJUSTMENT`).
+- `GET /` - Audits overall cross-system workflow paths with parameter filters.
+- `GET /product/{productId}` - Resolves full historical chronological lifecycle streams for a distinct product.
+
 ---
 
-## Active API Endpoints Matrix
+## 🚀 How to Clone & Run the Project Locally
 
-### Auth Context
+Follow these steps to set up and run the Spring Boot backend on your local machine:
 
-- `POST /api/auth/register` - Registers a new manager/user account.
-- `POST /api/auth/login` - Validates credentials and generates a JWT.
+### 1. Prerequisites
 
-### Dashboard Context 📊
+Ensure you have the following installed:
 
-- `GET /api/dashboard` - Fetches aggregated operational metrics, active low-stock item metrics, daily tracking, and rounded category-based asset stock distribution rates.
+- **Java 21** (JDK 21)
+- **Maven 3.9+**
+- **PostgreSQL** (running locally or via Docker)
 
-### Products Context
+### 2. Clone the Repository
 
-- `GET /api/products` - Retrieves all products with full relationship mapping.
-- `GET /api/products/{id}` - Fetches detailed single product records.
-- `POST /api/products` - Commits a new product bound to a specific category and supplier.
-- `DELETE /api/products/{id}` - Removes a product from stock tracking safely.
-- `GET /api/products/minstock` - Returns all items where currently available volume meets low threshold criteria.
+Open your terminal and run:
 
-### Categories Context
+```bash
+git clone [https://github.com/YOUR_USERNAME/GestionStock_SpringBoot.git](https://github.com/24156/GestionStock_SpringBoot.git)
+cd GestionStock_SpringBoot
+```
 
-- `GET /api/categories` - Lists active categories.
-- `POST /api/categories` - Adds a new classification group to the catalog.
+### 3. Database Configuration
 
-### Suppliers Context
+Open src/main/resources/application.properties and update your PostgreSQL credentials:
 
-- `GET /api/suppliers` - Retrieves active partners and vendors list.
-- `POST /api/suppliers` - Adds a supplier contact record to the database.
+```bash
+spring.datasource.url=jdbc:postgresql://localhost:5432/your_database_name
+spring.datasource.username=your_postgres_username
+spring.datasource.password=your_postgres_password
+spring.jpa.hibernate.ddl-auto=update
+```
 
-### Stock Movements Context
+### 4. Build and Run the Backend
 
-- `POST /api/stock-movements` - Commits an inventory adjustment logs (`IN` / `OUT` / `ADJUSTMENT`). Updates core product tables instantly.
-- `GET /api/stock-movements` - Advanced filters over transaction history using criteria keywords.
-- `GET /api/stock-movements/product/{productId}` - Chronological breakdown log tracking a distinct catalog item history.
+```bash
+# Build and download dependencies
+mvn clean install
 
----
+# Run the Spring Boot application
+mvn spring-boot:run
+```
 
-## Future Roadmap Milestones
-
-1. **Export Engineering Utilities:** Integrate system components generating compiled PDF reports and tabular Excel spreadsheet files using clean processing models.
-2. **Push Notification Service:** Implement alerts notifying mobile store managers immediately when products fall into critical low stock levels.
+The server will boot up and listen on http://localhost:8080 under the secure path gateway /api.
