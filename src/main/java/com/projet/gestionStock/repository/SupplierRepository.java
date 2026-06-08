@@ -9,7 +9,8 @@ import java.util.Optional;
 @Repository
 public interface SupplierRepository extends JpaRepository<Supplier, Long> {
 
-    List<Supplier> findByUserUsername(String username);
+    List<Supplier> findByUserUsernameAndActiveTrue(String username);
 
-    Optional<Supplier> findByIdAndUserUsername(Long id, String username);
+    Optional<Supplier> findByIdAndUserUsernameAndActiveTrue(Long id, String username);
+
 }

@@ -39,6 +39,9 @@ public class Supplier {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(nullable = false)
+    private boolean active = true;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

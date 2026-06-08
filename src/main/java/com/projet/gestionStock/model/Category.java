@@ -28,7 +28,7 @@ public class Category {
     @Column(length = 150)
     private String description;
 
-    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "category", fetch = FetchType.LAZY)
     private List<Product> products;
 
     @Column(name = "created_at",updatable= false)

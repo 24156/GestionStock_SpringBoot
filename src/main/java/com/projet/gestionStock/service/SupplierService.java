@@ -25,32 +25,18 @@ public class SupplierService {
 
     @Transactional(readOnly = true)
     public List<SupplierResponse> getAllSuppliers(String username) {
-        return supplierRepository.findByUserUsername(username).stream()
-                .map(sup -> new SupplierResponse(
-                        sup.getId(),
-                        sup.getName(),
-                        sup.getPhone(),
-                        sup.getEmail(),
-                        sup.getAddress(),
-                        sup.getUser().getId(),
-                        sup.getCreatedAt()
-                )).collect(Collectors.toList());
+
+        return supplierRepository.findByUserUsernameAndActiveTrue(username).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public SupplierResponse getSupplierById(Long id, String username) {
-        Supplier sup = supplierRepository.findByIdAndUserUsername(id, username)
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found or access denied for id: " + id));
+        Supplier sup = supplierRepository.findByIdAndUserUsernameAndActiveTrue(id, username)
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found, inactive, or access denied for id: " + id));
 
-        return new SupplierResponse(
-                sup.getId(),
-                sup.getName(),
-                sup.getPhone(),
-                sup.getEmail(),
-                sup.getAddress(),
-                sup.getUser().getId(),
-                sup.getCreatedAt()
-        );
+        return mapToResponse(sup);
     }
 
     @Transactional
@@ -64,24 +50,16 @@ public class SupplierService {
         sup.setEmail(request.getEmail());
         sup.setAddress(request.getAddress());
         sup.setUser(user);
+        sup.setActive(true);
 
         Supplier savedSup = supplierRepository.save(sup);
-
-        return new SupplierResponse(
-                savedSup.getId(),
-                savedSup.getName(),
-                savedSup.getPhone(),
-                savedSup.getEmail(),
-                savedSup.getAddress(),
-                savedSup.getUser().getId(),
-                savedSup.getCreatedAt()
-        );
+        return mapToResponse(savedSup);
     }
 
     @Transactional
     public SupplierResponse updateSupplier(Long id, SupplierRequest request, String username) {
-        Supplier sup = supplierRepository.findByIdAndUserUsername(id, username)
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found or access denied for id: " + id));
+        Supplier sup = supplierRepository.findByIdAndUserUsernameAndActiveTrue(id, username)
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found, inactive, or access denied for id: " + id));
 
         sup.setName(request.getName());
         sup.setPhone(request.getPhone());
@@ -89,23 +67,27 @@ public class SupplierService {
         sup.setAddress(request.getAddress());
 
         Supplier updatedSup = supplierRepository.save(sup);
-
-        return new SupplierResponse(
-                updatedSup.getId(),
-                updatedSup.getName(),
-                updatedSup.getPhone(),
-                updatedSup.getEmail(),
-                updatedSup.getAddress(),
-                updatedSup.getUser().getId(),
-                updatedSup.getCreatedAt()
-        );
+        return mapToResponse(updatedSup);
     }
 
     @Transactional
     public void deleteSupplier(Long id, String username) {
-        Supplier sup = supplierRepository.findByIdAndUserUsername(id, username)
-                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found or access denied for id: " + id));
+        Supplier sup = supplierRepository.findByIdAndUserUsernameAndActiveTrue(id, username)
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found, inactive, or access denied for id: " + id));
 
-        supplierRepository.delete(sup);
+        sup.setActive(false);
+        supplierRepository.save(sup);
+    }
+
+    private SupplierResponse mapToResponse(Supplier sup) {
+        return new SupplierResponse(
+                sup.getId(),
+                sup.getName(),
+                sup.getPhone(),
+                sup.getEmail(),
+                sup.getAddress(),
+                sup.getUser().getId(),
+                sup.getCreatedAt()
+        );
     }
 }
