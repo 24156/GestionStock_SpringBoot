@@ -14,7 +14,7 @@ import com.projet.gestionStock.service.ProductService;
 
 
 @RestController
-@RequestMapping("/products")
+@RequestMapping("/api/products")
 @RequiredArgsConstructor
 public class ProductController {
 

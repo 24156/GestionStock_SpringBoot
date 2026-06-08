@@ -41,11 +41,8 @@ public class SecurityConfig {
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/auth/**").permitAll()
-                .requestMatchers("/products/search").authenticated()
-                .requestMatchers("/products/minstock").authenticated()
-                .requestMatchers("/suppliers/**").authenticated()
-                .requestMatchers("/movements/**").authenticated()
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/**").authenticated()
                 .requestMatchers("/h2-console/**").authenticated()
                 .anyRequest().authenticated()
             )

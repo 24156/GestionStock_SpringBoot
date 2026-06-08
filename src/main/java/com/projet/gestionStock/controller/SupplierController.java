@@ -12,7 +12,7 @@ import com.projet.gestionStock.dto.response.SupplierResponse;
 import com.projet.gestionStock.service.SupplierService;
 
 @RestController
-@RequestMapping("/suppliers")
+@RequestMapping("/api/suppliers")
 @RequiredArgsConstructor
 public class SupplierController {
 
