@@ -1,116 +1,115 @@
-# Smart Inventory (Gestion de Stock) — Backend REST API
+# GestionStock - Inventory Management Backend
 
-An academic, secure, and production-grade RESTful API designed as a decoupled backend system for inventory management. Built with **Spring Boot 3.4** and **Spring Security**, this architecture focuses strictly on the clean isolation of data presentation layers, stateless cryptographic validation, and uniform exception propagation. It is fully engineered to be consumed by a minimalist, pixel-perfect frontend client like **Flutter**.
-
----
-
-## 🏗️ Core Architectural Design
-
-The backend implements an **N-Tier Layered Architecture** coupled with structural design patterns to preserve data integrity, loose coupling, and strict compliance with the _Single Responsibility Principle_.
-
-```
-[HTTP Request] ──> [Controller Layer] ──> [Service Layer] ──> [Repository Layer] ──> [Database (H2)]
-                         │                    │
-                (Validates DTOs)     (Handles Business Logic)
-```
-
-### 1. Architectural Layers
-
-- **Presentation Layer (`Controllers`)**: Intercepts HTTP incoming requests, handles syntax mapping, handles payload validation constraints, and routes requests to the business layer.
-- **Business Logic Layer (`Services`)**: Orchestrates data calculations, processes internal validation checks, enforces business isolation rules, and evaluates contextual token security identity.
-- **Data Access Layer (`Repositories`)**: Inherits from `JpaRepository` abstraction interfaces to handle transparent ORM-based transaction management with the persistent engine.
-
-### 2. Data Transfer Object (DTO) Design Pattern
-
-To prevent security leaks (such as exposing password crypt-hashes) and mitigate deep endless serialization cycles common in cyclic database relationships, the system systematically decouples database `@Entity` definitions from public APIs:
-
-- **Incoming Requests (`*Request`)**: Contain only primitive properties necessary for raw resource instantiation (e.g., bypassing full object references by utilizing a simple `Long categoryId`).
-- **Outgoing Responses (`*Response`)**: Provide a flattened, optimal, and performance-tuned payload structure structured cleanly for rapid UI styling, rendering contextual foreign labels (e.g., embedding a flat `categoryName` text field rather than loading parent tables entirely).
+A Spring Boot 3.4.0 REST API built with Java 21 and PostgreSQL to manage products, categories, suppliers, and track automated stock movements. Designed to serve as a reliable backend for a Flutter mobile application.
 
 ---
 
-## 🔒 Advanced Security & Identity Propagation
+## Architecture & Structural Overview
 
-The security layout utilizes an asynchronous, stateless defensive framework managed through **Spring Security 6**.
-
-```
-[Protected Endpoint] ──> [JwtAuthFilter] ──> Validates Token signature ──> Injects SecurityContext
-```
-
-### 1. Stateless Authentication Pipeline (`JWT`)
-
-Every endpoint context under the root except `/auth/**` and `/h2-console/**` requires strong authorization. A custom filter context (`JwtAuthFilter`) intercepts arriving transactions to parse the incoming headers:
-
-- It reads the string following the `Bearer ` statement within the `Authorization` request header.
-- It decrypts and verifies the cryptographic token key signature to ensure the packet has not been modified or expired.
-- Upon successful validation, it resolves the username _Subject_ and mounts the authentication properties securely inside the thread-local **`SecurityContextHolder`**.
-
-### 2. Dynamic Principal Binding (`@AuthenticationPrincipal`)
-
-To prevent unauthorized user cross-contamination or parameter hijacking (where a client manually forces or targets resources belonging to another user id), the server manages ownership dynamically. Controllers utilize the `@AuthenticationPrincipal` annotation to transparently receive the runtime session owner identity from the token payload, binding category and product models automatically to the authenticating context.
-
----
-
-## 🛠️ Global Exception Handling & Error Architecture
-
-A dedicated centralized handler annotated with `@ControllerAdvice` hooks directly into the framework execution tree to guarantee predictable error JSON response signatures for external application clients.
+The project follows a standard layered architecture to enforce a clean separation of concerns:
 
 ```
-                  ┌───> Catches [ResourceNotFoundException] ───> Returns 404 Not Found JSON
-[@ControllerAdvice]
-                  └───> Catches [AuthenticationException]   ───> Returns 401 Unauthorized JSON
-```
-
-### 1. Business Logic Exception Catching
-
-When a query parameter maps to a non-existent index key or a resource missing from database tables, the core raises a unique `ResourceNotFoundException`. The interceptor immediately absorbs this event, formatting a clean payload mapping to an accurate **`404 Not Found`** HTTP status code.
-
-### 2. Customized Authentication Error Mapping
-
-By default, internal credential filter failures result in generic server execution bubbles returning blank headers with unformatted statuses. To address this, a dedicated **`CustomAuthenticationEntryPoint`** intercepts unauthorized tokens at the root level, writing a clean, structured JSON format containing uniform property structures matching the standard application metadata:
-
-```json
-{
-  "status": 401,
-  "message": "Unauthorized: Token is missing, invalid or expired.",
-  "timestamp": "2026-06-01T21:45:12.395Z"
-}
+src/main/java/com/projet/gestionStock/
+├── config/         # Security and filter configurations (JWT, Web Security)
+├── controller/     # REST controllers exposing API endpoints
+├── dto/            # Data Transfer Objects
+│   ├── request/    # Inbound payload definitions
+│   └── response/   # Outbound response formats (Flutter tailored)
+├── exception/      # Global handler and application-specific exceptions
+├── model/          # JPA Hibernate entities
+├── repository/     # Data access abstraction layers
+├── service/        # Core business logic processing
+└── specification/  # Dynamic search predicate builders (JPA Criteria API)
 ```
 
 ---
 
-## 📑 Feature Breakdown & Endpoints Matrix
+## Implemented Core Features
 
-| Module                    | Context Route    | HTTP Verb | Authentication Requirement | Payload Contract & Behavior                                                                                                                                 | Expected HTTP Status |
-| :------------------------ | :--------------- | :-------: | :------------------------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------: |
-| **Authentication**        | `/auth/register` |  `POST`   |           `None`           | Receives sign-up credentials. Persists new user profiles while securely omitting the hashed password password from the response model.                      |   **201 Created**    |
-| **Authentication**        | `/auth/login`    |  `POST`   |           `None`           | Validates active credentials against store hashes. Issues a secure signed JWT string token upon validation.                                                 |      **200 OK**      |
-| **Categories Management** | `/categories`    |  `POST`   |       `Bearer Token`       | Accepts classification names. Inherently ties the object mapping profile to the calling contextual user ID.                                                 |   **201 Created**    |
-| **Categories Management** | `/categories`    |   `GET`   |       `Bearer Token`       | Resolves a structured array list containing inventory tracking models initialized by the caller.                                                            |      **200 OK**      |
-| **Products Management**   | `/products`      |  `POST`   |       `Bearer Token`       | Stores dynamic items with constraint keys (stock metrics, pricing models, parent category link). Generates response mappings including flat category names. |   **201 Created**    |
-| **Products Management**   | `/products`      |   `GET`   |       `Bearer Token`       | Fetches an optimized list representation displaying products mapped to the signed-in profile scope.                                                         |      **200 OK**      |
+### 1. Secure Authentication Architecture
+
+- Secure token-based access utilizing **JWT (JSON Web Tokens)** managed by `JwtAuthFilter`.
+- Custom user authentication configured via Spring Security and a centralized `CustomUserDetailsService`.
+- Dynamic extraction of the current authenticated operator inside controllers using `@AuthenticationPrincipal`.
+
+### 2. Supplier & Categorization Engine
+
+- Full structural separation of products using decoupled Category and Supplier entities.
+- Data contracts map essential metadata (`supplierName`, `categoryName`, IDs) safely into outbound structures without causing deep nested serialization anomalies or `NullPointerException` bugs on orphan records.
+
+### 3. Inventory Controls & Dynamic Specifications
+
+- Flexible cross-parameter searches using **JPA Specifications** (`CriteriaAPI`) to execute complex dynamic queries on data layers.
+- Low stock identification endpoint `/products/minstock` providing proactive tracking for active operations based on the state threshold condition:
+  $$M_i = \{ p \in P \mid 	ext{stock}_p \le 	ext{minStock}_p \}$$
+
+### 4. Automated Stock Movements Log
+
+- Dedicated transactional logging mechanism tracing inventory mutations (`IN`, `OUT`, `ADJUSTMENT`).
+- Built-in business rules validation: operations falling below zero quantities throw `BadRequestException`.
+- Changes trigger an automatic update synchronization routine updating the absolute quantity values within the product records.
 
 ---
 
-## 🚀 Environment Requirements & Execution Instructions
+## Database Schema Model Overview
 
-### Prerequisites
-
-- **Java Development Kit (JDK)**: Version 17 or higher (Java 21 recommended).
-- **Build System**: Apache Maven (Wrapper binary embedded).
-- **Database**: In-Memory H2 Engine (Pre-configured for local testing environments).
-
-### Compilation & Application Startup
-
-To clean target structures, assemble source assets, compile packages, and spin up the Tomcat network socket on local port `8081`, run the following lifecycle commands within your Linux terminal workspace:
-
-```bash
-# Clean project build files and boot the Spring application instance
-./mvnw clean spring-boot:run
+```
+                   ┌──────────────┐
+                   │     User     │
+                   └──────┬───────┘
+                          │ 1
+                          │
+         ┌────────────────┼────────────────┐
+         │ 1              │ 1              │ 1
+         ▼                ▼                ▼
+   ┌──────────┐     ┌──────────┐     ┌──────────────┐
+   │ Category │     │ Supplier │     │StockMovement │
+   └────┬─────┘     └────┬─────┘     └──────┬───────┘
+        │ 1              │ 1                │ *
+        │                │                  │
+        └───────┬────────┘                  │
+                ▼                           │
+          ┌──────────┐                      │
+          │ Product  ◄──────────────────────┘
+          └──────────┘ *
 ```
 
-The service console will broadcast initializing logs, and the database workspace console will become viewable locally via the interface route: `http://localhost:8081/h2-console`.
+---
+
+## Active API Endpoints Matrix
+
+### Auth Context
+
+- `POST /api/auth/register` - Registers a new manager/user account.
+- `POST /api/auth/login` - Validates credentials and generates a JWT.
+
+### Products Context
+
+- `GET /products` - Retrieves all products with full relationship mapping.
+- `GET /products/{id}` - Fetches detailed single product records.
+- `POST /products` - Commits a new product bound to a specific category and supplier.
+- `DELETE /products/{id}` - Removes a product from stock tracking safely.
+- `GET /products/minstock` - Returns all items where currently available volume meets low threshold criteria.
+
+### Categories Context
+
+- `GET /categories` - Lists active categories.
+- `POST /categories` - Adds a new classification group to the catalog.
+
+### Suppliers Context
+
+- `GET /suppliers` - Retrieves active partners and vendors list.
+- `POST /suppliers` - Adds a supplier contact record to the database.
+
+### Stock Movements Context
+
+- `POST /movements` - Commits an inventory adjustment logs (`IN` / `OUT` / `ADJUSTMENT`). Updates core product tables instantly.
+- `GET /movements` - Advanced filters over transaction history using criteria keywords.
+- `GET /movements/product/{productId}` - Chronological breakdown log tracking a distinct catalog item history.
 
 ---
 
-_Developed as an engineering blueprint for secure decoupled application development._
+## Future Roadmap Milestones
+
+1. **Dashboard Analytical Aggregations:** Implement isolated data endpoints calculating total capital investments, product volume, and performance distribution matrix statistics.
+2. **Export Engineering Utilities:** Integrate system components generating compiled PDF reports and tabular Excel spreadsheet files using clean processing models.
