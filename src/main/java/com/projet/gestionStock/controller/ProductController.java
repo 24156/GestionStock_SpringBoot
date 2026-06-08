@@ -21,25 +21,21 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
-    public ResponseEntity<List<ProductResponse>> getAllProducts(){
-        return ResponseEntity.ok(productService.getAllProducts());
+    public ResponseEntity<List<ProductResponse>> getAllProducts(
+        @RequestParam(required = false) String name,
+        @RequestParam(required = false) Double minPrice,
+        @RequestParam(required = false) Double maxPrice,
+        @RequestParam(required = false) Long categoryId) {
+            
+        // If all parameters are null, the service layer will automatically return all products
+        return ResponseEntity.ok(productService.getFilteredProducts(name, minPrice, maxPrice, categoryId));
     }
-
 
     @GetMapping("/minstock")
     public ResponseEntity<List<ProductResponse>> getAllLowStockProducts() {
         return ResponseEntity.ok(productService.getAllLowStockProducts());
     }
 
-    @GetMapping("/search")
-    public ResponseEntity<List<ProductResponse>> searchProducts(
-        @RequestParam(required = false) String name,
-        @RequestParam(required = false) Double minPrice,
-        @RequestParam(required = false) Double maxPrice,
-        @RequestParam(required = false) Long categoryId) {
-            
-        return ResponseEntity.ok(productService.getFilteredProducts(name, minPrice, maxPrice, categoryId));
-    }
 
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponse> getProductById(@PathVariable Long id){
