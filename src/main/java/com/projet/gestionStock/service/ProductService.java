@@ -18,6 +18,10 @@ import com.projet.gestionStock.repository.ProductRepository;
 import com.projet.gestionStock.repository.UserRepository;
 import com.projet.gestionStock.repository.SupplierRepository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+
 import lombok.AllArgsConstructor;
 
 @Service
@@ -30,10 +34,9 @@ public class ProductService {
     private final SupplierRepository supplierRepository; 
 
     @Transactional(readOnly = true)
-    public List<ProductResponse> getAllProducts() {
-        return productRepository.findAll().stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+    public Page<ProductResponse> getAllProducts(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        return productRepository.findAll(pageable).map(this::mapToResponse);
     }
 
     @Transactional(readOnly = true)
@@ -102,14 +105,16 @@ public class ProductService {
         productRepository.delete(pr);
     }
 
+    
     @Transactional(readOnly = true)
-    public List<ProductResponse> getFilteredProducts(String name, Double minPrice, Double maxPrice, Long categoryId) {
+    public Page<ProductResponse> getFilteredProducts(String name, Double minPrice, Double maxPrice, Long categoryId, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        
         org.springframework.data.jpa.domain.Specification<Product> spec = 
                 com.projet.gestionStock.specification.ProductSpecification.filterProducts(name, minPrice, maxPrice, categoryId);
         
-        return productRepository.findAll(spec).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        
+        return productRepository.findAll(spec, pageable).map(this::mapToResponse);
     }
 
     @Transactional(readOnly = true)

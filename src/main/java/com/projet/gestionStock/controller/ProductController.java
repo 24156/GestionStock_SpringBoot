@@ -6,7 +6,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 import java.util.List;
-
+import org.springframework.data.domain.Page;
 import com.projet.gestionStock.dto.request.ProductRequest;
 import com.projet.gestionStock.dto.response.ProductResponse;
 import com.projet.gestionStock.service.ProductService;
@@ -21,14 +21,15 @@ public class ProductController {
     private final ProductService productService;
 
     @GetMapping
-    public ResponseEntity<List<ProductResponse>> getAllProducts(
+    public ResponseEntity<Page<ProductResponse>> getAllProducts(
         @RequestParam(required = false) String name,
         @RequestParam(required = false) Double minPrice,
         @RequestParam(required = false) Double maxPrice,
-        @RequestParam(required = false) Long categoryId) {
+        @RequestParam(required = false) Long categoryId,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
             
-        // If all parameters are null, the service layer will automatically return all products
-        return ResponseEntity.ok(productService.getFilteredProducts(name, minPrice, maxPrice, categoryId));
+        return ResponseEntity.ok(productService.getFilteredProducts(name, minPrice, maxPrice, categoryId, page, size));
     }
 
     @GetMapping("/minstock")
