@@ -32,39 +32,15 @@ public class ProductService {
     @Transactional(readOnly = true)
     public List<ProductResponse> getAllProducts() {
         return productRepository.findAll().stream()
-                .map(pr -> new ProductResponse(
-                        pr.getId(),
-                        pr.getName(),
-                        pr.getPrice(),
-                        pr.getStock(),
-                        pr.getMinStock(),
-                        pr.getCategory().getId(),
-                        pr.getCategory().getName(),
-                        pr.getUser().getId(),
-                        pr.getCreatedAt(),
-                        pr.getSupplier() != null ? pr.getSupplier().getId() : null,  
-                        pr.getSupplier() != null ? pr.getSupplier().getName() : null  
-                )).collect(Collectors.toList());
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public ProductResponse getProductById(Long id) {
         Product pr = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
-
-        return new ProductResponse(
-                pr.getId(), 
-                pr.getName(),
-                pr.getPrice(),
-                pr.getStock(), 
-                pr.getMinStock(), 
-                pr.getCategory().getId(),
-                pr.getCategory().getName(),
-                pr.getUser().getId(),
-                pr.getCreatedAt(),
-                pr.getSupplier() != null ? pr.getSupplier().getId() : null,  
-                pr.getSupplier() != null ? pr.getSupplier().getName() : null 
-        );
+        return mapToResponse(pr);
     }
 
     @Transactional
@@ -91,27 +67,38 @@ public class ProductService {
         pr.setSupplier(supplier); 
 
         Product savePr = productRepository.save(pr);
+        return mapToResponse(savePr);
+    }
 
-        return new ProductResponse(
-                savePr.getId(),
-                savePr.getName(),
-                savePr.getPrice(),
-                savePr.getStock(),
-                savePr.getMinStock(),
-                savePr.getCategory().getId(),
-                savePr.getCategory().getName(),
-                savePr.getUser().getId(),
-                savePr.getCreatedAt(),
-                savePr.getSupplier() != null ? savePr.getSupplier().getId() : null,   
-                savePr.getSupplier() != null ? savePr.getSupplier().getName() : null  
-        );
+    @Transactional
+    public ProductResponse updateProduct(Long id, ProductRequest req) {
+        Product product = productRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
+
+        Category category = categoryRepository.findById(req.getCategoryId())
+            .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + req.getCategoryId()));
+            
+        Supplier supplier = null;
+        if (req.getSupplierId() != null) {
+            supplier = supplierRepository.findById(req.getSupplierId())
+                .orElseThrow(() -> new ResourceNotFoundException("Supplier not found with id: " + req.getSupplierId()));
+        }
+
+        product.setName(req.getName());
+        product.setPrice(req.getPrice());
+        product.setStock(req.getStock());
+        product.setMinStock(req.getMinStock());
+        product.setCategory(category);
+        product.setSupplier(supplier);
+
+        Product savedPr = productRepository.save(product);
+        return mapToResponse(savedPr);
     }
 
     @Transactional
     public void deleteProduct(Long id) {
         Product pr = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
-
         productRepository.delete(pr);
     }
 
@@ -121,25 +108,19 @@ public class ProductService {
                 com.projet.gestionStock.specification.ProductSpecification.filterProducts(name, minPrice, maxPrice, categoryId);
         
         return productRepository.findAll(spec).stream()
-        .map(pr -> new ProductResponse(
-                pr.getId(),
-                pr.getName(),
-                pr.getPrice(),
-                pr.getStock(),
-                pr.getMinStock(),
-                pr.getCategory().getId(),
-                pr.getCategory().getName(),
-                pr.getUser().getId(),
-                pr.getCreatedAt(),
-                pr.getSupplier() != null ? pr.getSupplier().getId() : null,
-                pr.getSupplier() != null ? pr.getSupplier().getName() : null            
-        )).collect(Collectors.toList());
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public List<ProductResponse> getAllLowStockProducts(){
         return productRepository.findLowStockProducts().stream()
-        .map(pr -> new ProductResponse(
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    private ProductResponse mapToResponse(Product pr) {
+        return new ProductResponse(
                 pr.getId(),
                 pr.getName(),
                 pr.getPrice(),
@@ -151,6 +132,6 @@ public class ProductService {
                 pr.getCreatedAt(),
                 pr.getSupplier() != null ? pr.getSupplier().getId() : null,   
                 pr.getSupplier() != null ? pr.getSupplier().getName() : null  
-        )).collect(Collectors.toList());
+        );
     }
 }
